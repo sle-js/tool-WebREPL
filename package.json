@@ -1,0 +1,27 @@
+{
+  "name": "tool-webrepl",
+  "version": "1.0.0",
+  "description": "A REPL for SL",
+  "main": "index.js",
+  "scripts": {
+    "test": "sle tests.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sle-js/tool-WebREPL.git"
+  },
+  "keywords": [
+    "SL",
+    "REPL"
+  ],
+  "author": "Graeme Lockley <graeme.lockley@gmail.com>",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/sle-js/tool-WebREPL/issues"
+  },
+  "homepage": "https://github.com/sle-js/tool-WebREPL#readme",
+  "dependencies": {
+    "express": "^4.16.2",
+    "sle": "^1.1.3"
+  }
+}
