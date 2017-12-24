@@ -2,11 +2,13 @@ require("sle");
 
 $importAll([
     "express",
-    "querystring",
-    "core:Native.Data.Array:1.2.0"
+    "./src/Process"
 ]).then($imports => {
-    const Express = $imports[0];
-    const QueryString = $imports[1];
+    const Express =
+        $imports[0];
+
+    const Process =
+        $imports[1];
 
     const app = Express();
 
@@ -29,18 +31,32 @@ $importAll([
         });
 
 
+    const stringToJSON = input =>
+        new Promise((resolve, reject) => {
+            try {
+                resolve(JSON.parse(input));
+            }
+            catch (e) {
+                reject({status: e.status, message: e.message});
+            }
+        });
+
+
     app.get('/', (req, res) => res.send('Hello World!'));
 
 
     app.put("/process", (req, res) =>
         loadBody(req, res)
-            .then(body => {
-                console.log(`Process Put: ${body}`);
-                res.writeHead(200, "OK", {'Content-Type': 'text/plain'});
-                res.end();
+            .then(stringToJSON)
+            .then(body => Process.exec(body.type)(body.script))
+            .then(result => {
+                res.writeHead(200, "OK", {'Content-Type': 'application/json'});
+                res.end(JSON.stringify({
+                    stdout: result[0],
+                    stderr: result[1]
+                }, null, 2));
             })
             .catch(err => {
-                console.log(`Error: ${err}`);
                 res.writeHead(500, "" + err.status, {'Content-Type': 'application/json'});
                 res.end(JSON.stringify(err, null, 2));
             }));
