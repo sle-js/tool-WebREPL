@@ -26,7 +26,11 @@ $importAll([
                 body += data;
             });
             req.on('end', () => {
-                resolve(body);
+                const input =
+                    JSON.stringify({type: "JavaScript", script: body}, null, 2);
+
+                console.log(input);
+                resolve(input);
             });
         });
 
@@ -42,10 +46,10 @@ $importAll([
         });
 
 
-    app.get('/', (req, res) => res.send('Hello World!'));
+    app.use(Express.static("www"));
 
 
-    app.put("/process", (req, res) =>
+    app.put("/api/process", (req, res) =>
         loadBody(req, res)
             .then(stringToJSON)
             .then(body => Process.exec(body.type)(body.script))
