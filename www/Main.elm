@@ -3,6 +3,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Http
 import Json.Decode as Decode
+import Json.Encode as Encode
 import Debug exposing (log)
 
 
@@ -96,6 +97,13 @@ runScript script =
                 , timeout = Nothing
                 , withCredentials = False
                 }
+
+        payload =
+            Encode.encode 4 <|
+                Encode.object [
+                    ("type", Encode.string "JavaScript"),
+                    ("script", Encode.string script)
+                ]
     in
         Http.send ScriptResult <|
-            put url (Http.stringBody "text/plain" script)
+            put url (Http.stringBody "text/plain" payload)

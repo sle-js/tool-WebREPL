@@ -26,11 +26,8 @@ $importAll([
                 body += data;
             });
             req.on('end', () => {
-                const input =
-                    JSON.stringify({type: "JavaScript", script: body}, null, 2);
-
-                console.log(input);
-                resolve(input);
+                console.log(body);
+                resolve(body);
             });
         });
 
