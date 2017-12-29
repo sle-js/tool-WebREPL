@@ -41,24 +41,36 @@ update msg model =
             ({ model | output = output}, Cmd.none)
 
         ScriptResult (Err err) ->
-            ({ model | output = log (httpErrorToString err) "Some or other error"}, Cmd.none)
+            ({ model | output = httpErrorToString err}, Cmd.none)
 
 
 httpErrorToString err =
-    case err of
-        Http.BadUrl u ->
-            "BadURL: " ++ u
+    let
+        responseToString response =
+            Encode.encode 4 <|
+                Encode.object [
+                    ("url", Encode.string response.url),
+                    ("status", Encode.object [
+                        ("code", Encode.int response.status.code),
+                        ("message", Encode.string response.status.message)
+                    ]),
+                    ("body", Encode.string response.body)
+                ]
+    in
+        case err of
+            Http.BadUrl u ->
+                "BadURL: " ++ u
 
-        Http.Timeout ->
-            "Timeout"
-        Http.NetworkError ->
-            "NetworkError"
+            Http.Timeout ->
+                "Timeout"
+            Http.NetworkError ->
+                "NetworkError"
 
-        Http.BadStatus _ ->
-            "BadStatus"
+            Http.BadStatus response ->
+                "BadStatus: " ++ (responseToString response)
 
-        Http.BadPayload _ _ ->
-            "BadPayload"
+            Http.BadPayload _ _ ->
+                "BadPayload"
 
 
 view : Model -> Html Msg
