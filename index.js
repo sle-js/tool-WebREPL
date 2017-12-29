@@ -58,8 +58,15 @@ $importAll([
                 }, null, 2));
             })
             .catch(err => {
-                res.writeHead(500, "" + err.status, {'Content-Type': 'application/json'});
-                res.end(JSON.stringify(err, null, 2));
+                res.writeHead(500, "Script Failed", {'Content-Type': 'application/json'});
+                res.end(JSON.stringify({
+                    cmd: err.cmd,
+                    code: err.code,
+                    killed: err.killed,
+                    signal: err.signal,
+                    message: err.message,
+                    stack: err.stack
+                }, null, 2));
             }));
 
 
