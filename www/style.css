@@ -1,0 +1,30 @@
+.buttons {
+    overflow: hidden;
+    background-color: gray;
+}
+
+div.button {
+    float: right;
+    display: block;
+    color: white;
+    font-family: Calibri, sans-serif;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+}
+
+div.button:hover {
+    background-color: #ddd;
+    color: black;
+}
+
+
+div.editor {
+    width: 100%;
+}
+
+textarea {
+    border:1px solid #999999;
+    margin:5px 0;
+    padding:3px;
+}

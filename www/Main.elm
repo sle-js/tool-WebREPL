@@ -75,10 +75,13 @@ httpErrorToString err =
 
 view : Model -> Html Msg
 view model =
-    div []
-    [ textarea [ placeholder "Script", onInput UpdateScript] []
-    , div [] [ text model.output ]
-    , button [ onClick RunScript ] [ text "Run" ]
+    div [] [
+        div [class "buttons"] [
+            div [class "button", onClick RunScript] [ text "Compile" ]
+        ],
+        div [class "editor"]
+        [ textarea [ placeholder "Script", onInput UpdateScript ] [] ],
+        div [class "output"] [ text model.output ]
     ]
 
 

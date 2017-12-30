@@ -4,7 +4,9 @@
   "description": "A REPL for SL",
   "main": "index.js",
   "scripts": {
-    "test": "sle tests.js"
+    "test": "sle tests.js",
+    "build": "(cd www ; elm-make --output elm.js Main.elm ) ; (cd www/lib ; cp ../../node_modules/codemirror/lib/* . )",
+    "clean": "rm www/elm.js ; rm www/lib/*"
   },
   "repository": {
     "type": "git",
@@ -21,6 +23,7 @@
   },
   "homepage": "https://github.com/sle-js/tool-WebREPL#readme",
   "dependencies": {
+    "codemirror": "^5.33.0",
     "express": "^4.16.2",
     "sle": "^1.1.3"
   },
