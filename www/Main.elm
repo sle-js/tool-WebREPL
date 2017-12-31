@@ -1,3 +1,5 @@
+port module Main exposing (..)
+
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -5,6 +7,9 @@ import Http
 import Json.Decode as Decode
 import Json.Encode as Encode
 import Debug exposing (log)
+
+
+port openEditor : String -> Cmd msg
 
 
 main =
@@ -77,10 +82,9 @@ view : Model -> Html Msg
 view model =
     div [] [
         div [class "buttons"] [
-            div [class "button", onClick RunScript] [ text "Compile" ]
+            div [class "button", onClick RunScript] [ text "Run" ]
         ],
-        div [class "editor"]
-        [ textarea [ placeholder "Script", onInput UpdateScript ] [] ],
+        div [id "editorID", class "editor"] [ ],
         div [class "output"] [ text model.output ]
     ]
 
@@ -92,7 +96,7 @@ subscriptions model =
 
 init : (Model, Cmd Msg)
 init =
-    ({script = "", output = "" }, Cmd.none)
+    ({script = "", output = "" }, openEditor "")
 
 
 runScript : String -> Cmd Msg

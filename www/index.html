@@ -8,6 +8,20 @@
 <body>
 <div></div>
 <script src="elm.js"></script>
-<script>Elm.Main.embed(document.querySelector("div"));</script>
+<script src="lib/codemirror.js"></script>
+<script>
+    const app = Elm.Main.embed(document.querySelector("div"));
+
+    app.ports.openEditor.subscribe(text => {
+        console.log("openEditor: [" + text + "]");
+        console.log(document.querySelector("div[id='editorID']"));
+
+        CodeMirror(document.querySelector("div[id='editorID']"), {
+            value: text,
+            mode: "javascript",
+            lineNumbers: true
+        });
+    });
+</script>
 </body>
 </html>
