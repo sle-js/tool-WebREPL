@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "sle tests.js",
-    "build": "(cd www ; elm-make --output elm.js Main.elm ) ; (cd www/lib ; cp ../../node_modules/codemirror/lib/* . )",
+    "build": "(cd www ; elm-make --output elm.js Main.elm ) ; mkdir -p www/lib ; (cd www/lib ; cp ../../node_modules/codemirror/lib/* . )",
     "clean": "rm www/elm.js ; rm www/lib/*"
   },
   "repository": {
