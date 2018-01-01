@@ -10,17 +10,22 @@
 <script src="elm.js"></script>
 <script src="lib/codemirror.js"></script>
 <script>
-    const app = Elm.Main.embed(document.querySelector("div"));
+    const app =
+        Elm.Main.embed(document.querySelector("div"));
+
+    let appDoc =
+        undefined;
 
     app.ports.openEditor.subscribe(text => {
-        console.log("openEditor: [" + text + "]");
-        console.log(document.querySelector("div[id='editorID']"));
-
-        CodeMirror(document.querySelector("div[id='editorID']"), {
+        appDoc = CodeMirror(document.querySelector("div[id='editorID']"), {
             value: text,
             mode: "javascript",
             lineNumbers: true
         });
+    });
+
+    app.ports.editorContents.subscribe(() => {
+        app.ports.contents.send(appDoc.getValue());
     });
 </script>
 </body>

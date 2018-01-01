@@ -11,6 +11,8 @@ import Debug exposing (log)
 
 port openEditor : String -> Cmd msg
 
+port editorContents : () -> Cmd msg
+
 
 main =
     Html.program
@@ -37,10 +39,10 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
     case msg of
         UpdateScript script ->
-            ({ model | script = script }, Cmd.none)
+            ({ model | script = script }, runScript script)
 
         RunScript ->
-            (model, runScript model.script)
+            (model, editorContents ())
 
         ScriptResult (Ok output) ->
             ({ model | output = output}, Cmd.none)
@@ -89,9 +91,11 @@ view model =
     ]
 
 
+port contents : (String -> msg) -> Sub msg
+
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    contents UpdateScript
 
 
 init : (Model, Cmd Msg)
