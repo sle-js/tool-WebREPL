@@ -48,7 +48,46 @@ update msg model =
             ({ model | output = output}, Cmd.none)
 
 
-httpErrorToString err =
+view : Model -> Html Msg
+view model =
+    div [class "container"] [
+        div [class "buttons"] [
+            div [class "button", onClick RunScript] [ text "Run" ]
+        ],
+        div [class "editorContainer"] [
+            div [id "editorID", class "editor"] []
+        ],
+        div [class "outputContainer"] [
+            outputView model
+        ]
+    ]
+
+
+outputView : Model -> Html Msg
+outputView model =
+--    let
+--        keyValues =
+--            Decode.decodeString (Decode.keyValuePairs Decode.string) model.output
+--    in
+        case model.output of
+            Ok s ->
+                div [id "outputID", class "output"] [ text s ]
+
+            Err e ->
+                div [id "outputID", class "output"] [ text (viewHttpError e) ]
+
+
+--        case keyValues of
+--            Ok lst ->
+--                div [id "outputID", class "output"] [
+--                    dl [] <| List.concatMap (\(k, v) -> [dt [] [text k], dd [] [text  v]]) lst
+--                ]
+--
+--            Err e ->
+--                div [id "outputID", class "output"] [ text ("Error: " ++ e) ]
+
+
+viewHttpError err =
     let
         responseToString response =
             Encode.encode 4 <|
@@ -76,44 +115,6 @@ httpErrorToString err =
             Http.BadPayload _ _ ->
                 "BadPayload"
 
-
-view : Model -> Html Msg
-view model =
-    div [class "container"] [
-        div [class "buttons"] [
-            div [class "button", onClick RunScript] [ text "Run" ]
-        ],
-        div [class "editorContainer"] [
-            div [id "editorID", class "editor"] []
-        ],
-        div [class "outputContainer"] [
-            outputView model
-        ]
-    ]
-
-
-outputView : Model -> Html Msg
-outputView model =
---    let
---        keyValues =
---            Decode.decodeString (Decode.keyValuePairs Decode.string) model.output
---    in
-        case model.output of
-            Ok s ->
-                div [id "outputID", class "output"] [ text s ]
-
-            Err e ->
-                div [id "outputID", class "output"] [ text (httpErrorToString e) ]
-
-
---        case keyValues of
---            Ok lst ->
---                div [id "outputID", class "output"] [
---                    dl [] <| List.concatMap (\(k, v) -> [dt [] [text k], dd [] [text  v]]) lst
---                ]
---
---            Err e ->
---                div [id "outputID", class "output"] [ text ("Error: " ++ e) ]
 
 
 port contents : (String -> msg) -> Sub msg
