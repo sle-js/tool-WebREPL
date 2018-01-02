@@ -1,6 +1,15 @@
+html, head, body {
+    padding: 0;
+    margin: 0;
+}
+
 .buttons {
     overflow: hidden;
     background-color: gray;
+    height: 40px;
+    padding: 0;
+    border: 0;
+    margin: 0;
 }
 
 div.button {
@@ -9,7 +18,8 @@ div.button {
     color: white;
     font-family: Calibri, sans-serif;
     text-align: center;
-    padding: 14px 16px;
+    text-height: 20px;
+    padding: 10px 16px;
     text-decoration: none;
 }
 
@@ -18,13 +28,24 @@ div.button:hover {
     color: black;
 }
 
-
-div.editor {
-    width: 100%;
+div.container {
 }
 
-textarea {
-    border:1px solid #999999;
-    margin:5px 0;
-    padding:3px;
+div.editorContainer {
+    position: relative;
+    float: left;
+    width: 50%;
+}
+
+div.editor {
+}
+
+div.outputContainer {
+    position: relative;
+    float: left;
+    width: 50%;
+    background-color: #eaeaea;
+}
+
+div.output {
 }

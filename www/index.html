@@ -5,7 +5,7 @@
     <link rel="stylesheet" href="style.css"/>
 </head>
 
-<body>
+<body onresize="windowResized()">
 <div></div>
 <script src="elm.js"></script>
 <script src="lib/codemirror.js"></script>
@@ -16,17 +16,29 @@
     let appDoc =
         undefined;
 
+
     app.ports.openEditor.subscribe(text => {
         appDoc = CodeMirror(document.querySelector("div[id='editorID']"), {
             value: text,
             mode: "javascript",
             lineNumbers: true
         });
+        windowResized();
     });
+
 
     app.ports.editorContents.subscribe(() => {
         app.ports.contents.send(appDoc.getValue());
     });
+
+
+    const windowResized = () => {
+        const calculatedHeight =
+            `${window.innerHeight - 40}px`;
+
+        appDoc.setSize(undefined, calculatedHeight);
+        document.querySelector("div[id='outputID']").style.height = calculatedHeight;
+    }
 </script>
 </body>
 </html>
