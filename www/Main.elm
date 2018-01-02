@@ -74,7 +74,7 @@ outputView model =
                 div [id "outputID", class "output"] [ text s ]
 
             Err e ->
-                div [id "outputID", class "output"] [ text (viewHttpError e) ]
+                div [id "outputID", class "output"] (viewHttpError e)
 
 
 --        case keyValues of
@@ -82,13 +82,22 @@ outputView model =
 --                div [id "outputID", class "output"] [
 --                    dl [] <| List.concatMap (\(k, v) -> [dt [] [text k], dd [] [text  v]]) lst
 --                ]
---
---            Err e ->
---                div [id "outputID", class "output"] [ text ("Error: " ++ e) ]
 
 
+viewHttpError : Http.Error -> List (Html Msg)
 viewHttpError err =
     let
+        errorPage : String -> List (String, String) -> List (Html Msg)
+        errorPage name suffixes =
+                [
+                    h1 [] [text "HTTP Error"],
+                    dl []
+                        <| List.concat
+                            <| List.map (\(k, v) -> [dt [] [text k], dd [] [text v]])
+                            <| ("Type", name) :: suffixes
+                ]
+
+
         responseToString response =
             Encode.encode 4 <|
                 Encode.object [
@@ -102,18 +111,20 @@ viewHttpError err =
     in
         case err of
             Http.BadUrl u ->
-                "BadURL: " ++ u
+                errorPage "Bad URL" [("URL", u)]
 
             Http.Timeout ->
-                "Timeout"
+                errorPage "Timeout" []
+
             Http.NetworkError ->
-                "NetworkError"
+                errorPage "Network Error" []
 
             Http.BadStatus response ->
-                "BadStatus: " ++ (responseToString response)
+                errorPage "Bad Status" [("Response", responseToString response)]
 
-            Http.BadPayload _ _ ->
-                "BadPayload"
+            Http.BadPayload reason response ->
+                errorPage "Bad Payload" [("Reason", reason), ("Response", responseToString response)]
+
 
 
 
