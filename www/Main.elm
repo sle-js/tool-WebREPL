@@ -63,22 +63,11 @@ view model =
     ]
 
 
-errorPage : String -> List (String, String) -> Html Msg
-errorPage name suffixes =
-    div [id "outputID", class "output"] [
-        h1 [] [text "HTTP Error"],
-        dl []
-            <| List.concat
-                <| List.map (\(k, v) -> [dt [] [text k], dd [] [text v]])
-                <| ("Type", name) :: suffixes
-    ]
-
-
 outputView : Model -> Html Msg
 outputView model =
     let
-        keyValues s =
-            Decode.decodeString (Decode.keyValuePairs Decode.string) s
+        keyValues =
+            Decode.decodeString (Decode.keyValuePairs Decode.string)
     in
         case model.output of
             Ok s ->
@@ -89,15 +78,29 @@ outputView model =
                         ]
 
                     Err e ->
-                        div [id "outputID", class "output"] [ text e ]
+                        errorPage "HTTP Error" "JSON Parsing Error" [("Message", e)]
 
             Err e ->
                 viewHttpError e
 
 
+errorPage : String -> String -> List (String, String) -> Html Msg
+errorPage title name suffixes =
+    div [id "outputID", class "output"] [
+        h1 [] [text title],
+        dl []
+            <| List.concat
+                <| List.map (\(k, v) -> [dt [] [text k], dd [] [text v]])
+                <| ("Type", name) :: suffixes
+    ]
+
+
 viewHttpError : Http.Error -> Html Msg
 viewHttpError err =
     let
+        httpErrorPage =
+            errorPage "HTTP Error"
+
         responseToString response =
             Encode.encode 4 <|
                 Encode.object [
@@ -111,19 +114,19 @@ viewHttpError err =
     in
         case err of
             Http.BadUrl u ->
-                errorPage "Bad URL" [("URL", u)]
+                httpErrorPage "Bad URL" [("URL", u)]
 
             Http.Timeout ->
-                errorPage "Timeout" []
+                httpErrorPage "Timeout" []
 
             Http.NetworkError ->
-                errorPage "Network Error" []
+                httpErrorPage "Network Error" []
 
             Http.BadStatus response ->
-                errorPage "Bad Status" [("Response", responseToString response)]
+                httpErrorPage "Bad Status" [("Response", responseToString response)]
 
             Http.BadPayload reason response ->
-                errorPage "Bad Payload" [("Reason", reason), ("Response", responseToString response)]
+                httpErrorPage "Bad Payload" [("Reason", reason), ("Response", responseToString response)]
 
 
 
