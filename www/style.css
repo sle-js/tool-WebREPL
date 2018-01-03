@@ -21,11 +21,13 @@ div.button {
     text-height: 20px;
     padding: 10px 16px;
     text-decoration: none;
+    transition: 0.2s;
 }
 
 div.button:hover {
     background-color: #ddd;
     color: black;
+    cursor: pointer;
 }
 
 div.container {
@@ -47,39 +49,48 @@ div.outputContainer {
     background-color: #eaeaea;
 }
 
-div.output {
+.output {
 }
 
-
-
-.tab {
+.output .tabs {
     overflow: hidden;
+    height: 35px;
     border: 1px solid #ccc;
-    background-color: #f1f1f1;
+    background-color: #b5b5b5;
 }
 
-.tab button {
+.output .tabs .tab {
     background-color: inherit;
     float: left;
     border: none;
     outline: none;
     cursor: pointer;
-    padding: 14px 16px;
-    transition: 0.3s;
-    font-size: 17px;
+    padding: 10px 16px;
+    transition: 0.2s;
+    text-height: 15px;
 }
 
-.tab button:hover {
+.output .tabs .tab:hover {
     background-color: #ddd;
 }
 
-.tab button.active {
+.output .tabs .tab.active {
     background-color: #ccc;
 }
 
 .tabcontent {
-    display: block;
+}
+
+.tabcontent {
     padding: 6px 12px;
-    border: 1px solid #ccc;
-    border-top: none;
+    font-family: "Courier New", monospace;
+    font-size: smaller;
+    background-color: inherit;
+    overflow-y: scroll;
+}
+
+.tabcontent p {
+    padding: 0;
+    border: 0;
+    margin: 0;
 }

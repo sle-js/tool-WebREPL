@@ -6,12 +6,17 @@ import Html.Events exposing (..)
 import Http
 import Json.Decode as Decode
 import Json.Encode as Encode
+import Task
+import Window
+
 import Debug exposing (log)
 
 
 port openEditor : String -> Cmd msg
 
 port editorContents : () -> Cmd msg
+
+port editorHeight : Int -> Cmd msg
 
 
 main =
@@ -25,6 +30,7 @@ main =
 
 type alias Model =
     { script : String
+    , height: Int
     , output : Result ErrorModel SuccessModel
     }
 
@@ -46,6 +52,7 @@ type Msg
     | RunScript
     | ScriptResult (Result Http.Error String)
     | SelectOutput String
+    | WindowResize Int
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -62,6 +69,9 @@ update msg model =
 
         SelectOutput tabName ->
             ({ model | output = Result.map (\s -> {s | currentTab = Just tabName }) model.output }, Cmd.none)
+
+        WindowResize height ->
+            ({ model | height = height }, editorHeight (height - 40))
 
 
 parseScriptResult : Result Http.Error String -> Result ErrorModel SuccessModel
@@ -134,14 +144,14 @@ outputView : Model -> Html Msg
 outputView model =
     case model.output of
         Ok lst ->
-            successPage lst
+            successPage model.height lst
 
         Err e ->
-            errorPage e
+            errorPage model.height e
 
 
-successPage : SuccessModel -> Html Msg
-successPage model =
+successPage : Int -> SuccessModel -> Html Msg
+successPage height model =
     let
         currentTab =
             Maybe.withDefault "" model.currentTab
@@ -149,14 +159,14 @@ successPage model =
         content s =
             List.map (\t -> p [] [text t]) (String.split "\n" s)
     in
-        div [id "outputID", class "output"]
-            <| (div [class "tab"] (List.map (\(k, v) -> button [class (if k == currentTab then "tablinks active" else "tablinks"), onClick (SelectOutput k)] [text k]) model.result))
-                    :: (List.map (\(k, v) -> div [class "tabcontent"] (content v)) (List.filter (\(k, v) -> k == currentTab) model.result))
+        div [id "outputID", class "output", style [("height", (toString (height - 40)) ++ "px")]]
+            <| (div [class "tabs"] (List.map (\(k, v) -> div [class (if k == currentTab then "tab active" else "tab"), onClick (SelectOutput k)] [text k]) model.result))
+                    :: (List.map (\(k, v) -> div [class "tabcontent", style [("height", (toString (height - 99) ++ "px"))]] (content v)) (List.filter (\(k, v) -> k == currentTab) model.result))
 
 
-errorPage : ErrorModel -> Html Msg
-errorPage model =
-    div [id "outputID", class "output"] [
+errorPage : Int -> ErrorModel -> Html Msg
+errorPage height model =
+    div [id "outputID", class "output", style [("height", (toString (height - 40)) ++ "px")]] [
         h1 [] [text model.title],
         dl []
             <| List.concat
@@ -169,12 +179,26 @@ port contents : (String -> msg) -> Sub msg
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    contents UpdateScript
+    Sub.batch [
+        contents UpdateScript,
+        Window.resizes (\size -> WindowResize size.height)
+    ]
 
 
 init : (Model, Cmd Msg)
 init =
-    (Model "" (Result.Ok (SuccessModel [] Nothing)), openEditor "")
+    let
+        initialScript =
+            "for (let lp = 0; lp < 10; lp += 1)\n\tconsole.log(lp);"
+
+        initialBatch =
+            Cmd.batch [
+                openEditor initialScript,
+                Task.perform (\size -> WindowResize size.height) Window.size
+            ]
+
+    in
+        (Model "" 0 (Result.Ok (SuccessModel [] Nothing)), initialBatch)
 
 
 runScript : String -> Cmd Msg
