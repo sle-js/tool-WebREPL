@@ -7,6 +7,7 @@ import Http
 import Json.Decode as Decode
 import Json.Encode as Encode
 import Task
+import Navigation
 import Window
 
 import Debug exposing (log)
@@ -20,7 +21,7 @@ port editorHeight : Int -> Cmd msg
 
 
 main =
-    Html.program
+    Navigation.program (\l -> LocationChanged l)
     { init = init
     , view = view
     , update = update
@@ -29,7 +30,8 @@ main =
 
 
 type alias Model =
-    { script : String
+    { loc : Navigation.Location
+    , script : String
     , height: Int
     , output : Result ErrorModel SuccessModel
     }
@@ -53,13 +55,14 @@ type Msg
     | ScriptResult (Result Http.Error String)
     | SelectOutput String
     | WindowResize Int
+    | LocationChanged Navigation.Location
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
     case msg of
         UpdateScript script ->
-            ({ model | script = script }, runScript script)
+            ({ model | script = script }, runScript model.loc.href script)
 
         RunScript ->
             (model, editorContents ())
@@ -72,6 +75,9 @@ update msg model =
 
         WindowResize height ->
             ({ model | height = height }, editorHeight (height - 40))
+
+        LocationChanged l ->
+            (model, Cmd.none)
 
 
 parseScriptResult : Result Http.Error String -> Result ErrorModel SuccessModel
@@ -185,8 +191,8 @@ subscriptions model =
     ]
 
 
-init : (Model, Cmd Msg)
-init =
+init : Navigation.Location -> (Model, Cmd Msg)
+init l =
     let
         initialScript =
             "for (let lp = 0; lp < 10; lp += 1)\n\tconsole.log(lp);"
@@ -198,15 +204,15 @@ init =
             ]
 
     in
-        (Model "" 0 (Result.Ok (SuccessModel [] Nothing)), initialBatch)
+        log (toString l) (Model l "" 0 (Result.Ok (SuccessModel [] Nothing)), initialBatch)
 
 
-runScript : String -> Cmd Msg
-runScript script =
+runScript : String -> String -> Cmd Msg
+runScript href script =
     let
         url =
 --            "https://boiling-stream-77584.herokuapp.com/process"
-            "http://localhost:5000/api/process"
+            href ++ "api/process"
 
         put url body =
             Http.request
