@@ -138,9 +138,9 @@ outputView model =
 
 successPage : SuccessModel -> Html Msg
 successPage model =
-            div [id "outputID", class "output"] [
-                dl [] <| List.concatMap (\(k, v) -> [dt [] [text k], dd [] [text  v]]) model.result
-            ]
+    div [id "outputID", class "output"] [
+        dl [] <| List.concatMap (\(k, v) -> [dt [] [text k], dd [] [text  v]]) model.result
+    ]
 
 
 errorPage : ErrorModel -> Html Msg
