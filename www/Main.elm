@@ -25,7 +25,19 @@ main =
 
 type alias Model =
     { script : String
-    , output : Result Http.Error String
+    , output : Result ErrorModel SuccessModel
+    }
+
+
+type alias ErrorModel =
+    { title : String
+    , properties: List (String, String)
+    }
+
+
+type alias SuccessModel =
+    { result : List (String, String)
+    , currentTab : Maybe String
     }
 
 
@@ -45,7 +57,58 @@ update msg model =
             (model, editorContents ())
 
         ScriptResult output ->
-            ({ model | output = output}, Cmd.none)
+            ({ model | output = parseScriptResult output}, Cmd.none)
+
+
+parseScriptResult : Result Http.Error String -> Result ErrorModel SuccessModel
+parseScriptResult output =
+    let
+        keyValues =
+            Decode.decodeString (Decode.keyValuePairs Decode.string)
+
+        parseHttpError : Http.Error -> ErrorModel
+        parseHttpError err =
+            let
+                httpErrorPage t properties =
+                    ErrorModel "HTTP Error" <| ("Type", t) :: properties
+
+                responseToString response =
+                    Encode.encode 4 <|
+                        Encode.object [
+                            ("url", Encode.string response.url),
+                            ("status", Encode.object [
+                                ("code", Encode.int response.status.code),
+                                ("message", Encode.string response.status.message)
+                            ]),
+                            ("body", Encode.string response.body)
+                        ]
+            in
+                case err of
+                    Http.BadUrl u ->
+                        httpErrorPage "Bad URL" [("URL", u)]
+
+                    Http.Timeout ->
+                        httpErrorPage "Timeout" []
+
+                    Http.NetworkError ->
+                        httpErrorPage "Network Error" []
+
+                    Http.BadStatus response ->
+                        httpErrorPage "Bad Status" [("Response", responseToString response)]
+
+                    Http.BadPayload reason response ->
+                        httpErrorPage "Bad Payload" [("Reason", reason), ("Response", responseToString response)]
+
+    in
+        case output of
+            Ok s ->
+                keyValues s
+                    |> Result.mapError (\e -> ErrorModel "HTTP Error" [("Type", "JSON Parsing Error"), ("Message", e)])
+                    |> Result.map (\s -> SuccessModel s Nothing)
+
+            Err e ->
+                Err <| parseHttpError e
+
 
 
 view : Model -> Html Msg
@@ -65,70 +128,30 @@ view model =
 
 outputView : Model -> Html Msg
 outputView model =
-    let
-        keyValues =
-            Decode.decodeString (Decode.keyValuePairs Decode.string)
-    in
-        case model.output of
-            Ok s ->
-                case keyValues s of
-                    Ok lst ->
-                        div [id "outputID", class "output"] [
-                            dl [] <| List.concatMap (\(k, v) -> [dt [] [text k], dd [] [text  v]]) lst
-                        ]
+    case model.output of
+        Ok lst ->
+            successPage lst
 
-                    Err e ->
-                        errorPage "HTTP Error" "JSON Parsing Error" [("Message", e)]
-
-            Err e ->
-                viewHttpError e
+        Err e ->
+            errorPage e
 
 
-errorPage : String -> String -> List (String, String) -> Html Msg
-errorPage title name suffixes =
+successPage : SuccessModel -> Html Msg
+successPage model =
+            div [id "outputID", class "output"] [
+                dl [] <| List.concatMap (\(k, v) -> [dt [] [text k], dd [] [text  v]]) model.result
+            ]
+
+
+errorPage : ErrorModel -> Html Msg
+errorPage model =
     div [id "outputID", class "output"] [
-        h1 [] [text title],
+        h1 [] [text model.title],
         dl []
             <| List.concat
                 <| List.map (\(k, v) -> [dt [] [text k], dd [] [text v]])
-                <| ("Type", name) :: suffixes
+                <| model.properties
     ]
-
-
-viewHttpError : Http.Error -> Html Msg
-viewHttpError err =
-    let
-        httpErrorPage =
-            errorPage "HTTP Error"
-
-        responseToString response =
-            Encode.encode 4 <|
-                Encode.object [
-                    ("url", Encode.string response.url),
-                    ("status", Encode.object [
-                        ("code", Encode.int response.status.code),
-                        ("message", Encode.string response.status.message)
-                    ]),
-                    ("body", Encode.string response.body)
-                ]
-    in
-        case err of
-            Http.BadUrl u ->
-                httpErrorPage "Bad URL" [("URL", u)]
-
-            Http.Timeout ->
-                httpErrorPage "Timeout" []
-
-            Http.NetworkError ->
-                httpErrorPage "Network Error" []
-
-            Http.BadStatus response ->
-                httpErrorPage "Bad Status" [("Response", responseToString response)]
-
-            Http.BadPayload reason response ->
-                httpErrorPage "Bad Payload" [("Reason", reason), ("Response", responseToString response)]
-
-
 
 
 port contents : (String -> msg) -> Sub msg
@@ -140,7 +163,7 @@ subscriptions model =
 
 init : (Model, Cmd Msg)
 init =
-    ({script = "", output = Result.Ok "" }, openEditor "")
+    (Model "" (Result.Ok (SuccessModel [] Nothing)), openEditor "")
 
 
 runScript : String -> Cmd Msg
