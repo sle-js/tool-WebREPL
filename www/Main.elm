@@ -45,6 +45,7 @@ type Msg
     = UpdateScript String
     | RunScript
     | ScriptResult (Result Http.Error String)
+    | SelectOutput String
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -57,7 +58,10 @@ update msg model =
             (model, editorContents ())
 
         ScriptResult output ->
-            ({ model | output = parseScriptResult output}, Cmd.none)
+            ({ model | output = parseScriptResult output }, Cmd.none)
+
+        SelectOutput tabName ->
+            ({ model | output = Result.map (\s -> {s | currentTab = Just tabName }) model.output }, Cmd.none)
 
 
 parseScriptResult : Result Http.Error String -> Result ErrorModel SuccessModel
@@ -104,7 +108,7 @@ parseScriptResult output =
             Ok s ->
                 keyValues s
                     |> Result.mapError (\e -> ErrorModel "HTTP Error" [("Type", "JSON Parsing Error"), ("Message", e)])
-                    |> Result.map (\s -> SuccessModel s Nothing)
+                    |> Result.map (\s -> SuccessModel s (Just "stdout"))
 
             Err e ->
                 Err <| parseHttpError e
@@ -138,9 +142,16 @@ outputView model =
 
 successPage : SuccessModel -> Html Msg
 successPage model =
-    div [id "outputID", class "output"] [
-        dl [] <| List.concatMap (\(k, v) -> [dt [] [text k], dd [] [text  v]]) model.result
-    ]
+    let
+        currentTab =
+            Maybe.withDefault "" model.currentTab
+
+        content s =
+            List.map (\t -> p [] [text t]) (String.split "\n" s)
+    in
+        div [id "outputID", class "output"]
+            <| (div [class "tab"] (List.map (\(k, v) -> button [class (if k == currentTab then "tablinks active" else "tablinks"), onClick (SelectOutput k)] [text k]) model.result))
+                    :: (List.map (\(k, v) -> div [class "tabcontent"] (content v)) (List.filter (\(k, v) -> k == currentTab) model.result))
 
 
 errorPage : ErrorModel -> Html Msg
@@ -177,7 +188,7 @@ runScript script =
             Http.request
                 { method = "PUT"
                 , headers = []
-                , url = log ("URL: " ++ url) url
+                , url = url
                 , body = body
                 , expect = Http.expectString
                 , timeout = Nothing
