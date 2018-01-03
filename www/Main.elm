@@ -63,41 +63,41 @@ view model =
     ]
 
 
+errorPage : String -> List (String, String) -> Html Msg
+errorPage name suffixes =
+    div [id "outputID", class "output"] [
+        h1 [] [text "HTTP Error"],
+        dl []
+            <| List.concat
+                <| List.map (\(k, v) -> [dt [] [text k], dd [] [text v]])
+                <| ("Type", name) :: suffixes
+    ]
+
+
 outputView : Model -> Html Msg
 outputView model =
---    let
---        keyValues =
---            Decode.decodeString (Decode.keyValuePairs Decode.string) model.output
---    in
+    let
+        keyValues s =
+            Decode.decodeString (Decode.keyValuePairs Decode.string) s
+    in
         case model.output of
             Ok s ->
-                div [id "outputID", class "output"] [ text s ]
+                case keyValues s of
+                    Ok lst ->
+                        div [id "outputID", class "output"] [
+                            dl [] <| List.concatMap (\(k, v) -> [dt [] [text k], dd [] [text  v]]) lst
+                        ]
+
+                    Err e ->
+                        div [id "outputID", class "output"] [ text e ]
 
             Err e ->
-                div [id "outputID", class "output"] (viewHttpError e)
+                viewHttpError e
 
 
---        case keyValues of
---            Ok lst ->
---                div [id "outputID", class "output"] [
---                    dl [] <| List.concatMap (\(k, v) -> [dt [] [text k], dd [] [text  v]]) lst
---                ]
-
-
-viewHttpError : Http.Error -> List (Html Msg)
+viewHttpError : Http.Error -> Html Msg
 viewHttpError err =
     let
-        errorPage : String -> List (String, String) -> List (Html Msg)
-        errorPage name suffixes =
-                [
-                    h1 [] [text "HTTP Error"],
-                    dl []
-                        <| List.concat
-                            <| List.map (\(k, v) -> [dt [] [text k], dd [] [text v]])
-                            <| ("Type", name) :: suffixes
-                ]
-
-
         responseToString response =
             Encode.encode 4 <|
                 Encode.object [
