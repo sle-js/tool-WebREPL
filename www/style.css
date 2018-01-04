@@ -50,6 +50,7 @@ div.outputContainer {
 }
 
 .output {
+    overflow-x: scroll;
 }
 
 .output .tabs {
