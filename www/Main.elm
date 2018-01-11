@@ -211,7 +211,6 @@ runScript : String -> String -> Cmd Msg
 runScript href script =
     let
         url =
---            "https://boiling-stream-77584.herokuapp.com/process"
             href ++ "api/process"
 
         put url body =
